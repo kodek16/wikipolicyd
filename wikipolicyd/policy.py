@@ -44,8 +44,8 @@ class Policy(object):
             self._exception_date = datetime.datetime.strptime(
                     config['stream']['exception'], '%Y-%m-%d').date()
 
-    def data_limit_for_today(self) -> Optional[int]:
+    def data_limit(self, date: datetime.date) -> Optional[int]:
         if (self._exception_date
-                and self._exception_date == datetime.date.today()):
+                and self._exception_date == date):
             return None
         return self._data_limit_gb

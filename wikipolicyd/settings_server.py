@@ -27,6 +27,19 @@ class SettingsServer(object, metaclass=ABCMeta):
     def activate_turbo(self) -> None:
         """Activates the "turbo" button, buying more high-speed data."""
 
+    # The methods below should really depend on the active plan.
+    def get_turbo_price(self) -> int:
+        """Returns the price of activating the "turbo" button, in kopeikas."""
+        return 10
+
+    def get_included_free_gb(self) -> int:
+        """Returns the free high-speed data amount included with the plan."""
+        return 1
+
+    def get_turbo_gb(self) -> int:
+        """Returns the data amount bought by activating the "turbo" button."""
+        return 1
+
 
 class RealWikilinkSettingsServer(SettingsServer):
     """Settings provider that connects to the real WikiLink server."""
@@ -52,12 +65,7 @@ class RealWikilinkSettingsServer(SettingsServer):
     def _refresh_data(self) -> None:
         res = requests.post(
                 'http://cab.wikilink.by/sessions.php',
-                data={
-                    'user[redirect]': '',
-                    'user_account': self.username,
-                    'user_password': self.password,
-                    'commit': 'Войти',
-                })
+                data=self._login_payload())
         self._last_update_time = time.time()
 
         res.encoding = 'utf8'
@@ -85,6 +93,14 @@ class RealWikilinkSettingsServer(SettingsServer):
             raise RuntimeError(
                     'Could not parse remaining high-speed data amount')
 
+    def _login_payload(self) -> dict:
+        return {
+            'user[redirect]': '',
+            'user_account': self.username,
+            'user_password': self.password,
+            'commit': 'Войти',
+        }
+
     def get_balance(self) -> int:
         if self._should_refresh_data():
             self._refresh_data()
@@ -101,4 +117,16 @@ class RealWikilinkSettingsServer(SettingsServer):
         return self.remaining_mb
 
     def activate_turbo(self) -> None:
-        pass
+        with requests.Session() as s:
+            res = s.post(
+                    'http://cab.wikilink.by/sessions.php',
+                    data=self._login_payload())
+            if not res.ok:
+                raise RuntimeError(
+                        'Could not login to settings: %d' % res.status_code)
+
+            res = s.post('http://cab.wikilink.by/turbo.php',
+                         data={'commit': 'Включить+TURBO'})
+            if not res.ok:
+                raise RuntimeError(
+                        'Could not activate turbo: %d' % res.status_code)
