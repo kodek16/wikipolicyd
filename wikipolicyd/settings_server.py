@@ -83,7 +83,7 @@ class RealWikilinkSettingsServer(SettingsServer):
         if plan_match:
             self.plan = plan_match.group('target')
         else:
-            raise RuntimeError('Could not parse traffic plan')
+            raise RuntimeError('Could not parse data plan')
 
         remaining_mb_match = self._REMAINING_MB_RE.search(body)
         if remaining_mb_match:

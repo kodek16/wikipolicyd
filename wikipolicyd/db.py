@@ -15,6 +15,13 @@ class Db(object):
     so this information needs to be stored in DB.
     """
     def __init__(self, name: str):
+        if not _DB_DIR.is_dir():
+            raise RuntimeError('{} must be a directory'.format(_DB_DIR))
+
+        if _DB_DIR.owner() != os.environ.get('USER'):
+            raise RuntimeError('{} must be owned by user running wikipolicyd'
+                               .format(_DB_DIR))
+
         os.makedirs(_DB_DIR, exist_ok=True)
         self._db = shelve.open(str(_DB_DIR / name))
 

@@ -10,8 +10,6 @@ from typing import Optional
 
 from wikipolicyd.config import ConfigFile
 
-_CURRENT_VERSION = 1
-
 
 class Policy(object):
     def __init__(self, read_config: bool = True, **kwargs):
@@ -21,15 +19,7 @@ class Policy(object):
             return
 
         config = ConfigFile('policy')
-        if config['version'] != _CURRENT_VERSION:
-            msg = ('Policy file version ({}) is not the supported version {}'
-                   .format(config['version'], _CURRENT_VERSION))
-            raise RuntimeError(msg)
-
-        if 'stream' not in config:
-            raise RuntimeError('Policy file must have a "stream" block')
-
-        data_limit = str(config['stream']['data_limit'])
+        data_limit = str(config['data_limit'])
         if not re.match(r'^\d+G$', data_limit):
             raise RuntimeError(
                     'Policy file must have a "stream.data_limit" key '
@@ -40,9 +30,9 @@ class Policy(object):
             raise RuntimeError('Data limit must be a positive value')
 
         self._exception_date = None  # type: Optional[datetime.date]
-        if 'exception' in config['stream']:
+        if 'exception' in config:
             self._exception_date = datetime.datetime.strptime(
-                    config['stream']['exception'], '%Y-%m-%d').date()
+                    config['exception'], '%Y-%m-%d').date()
 
     def data_limit(self, date: datetime.date) -> Optional[int]:
         if (self._exception_date

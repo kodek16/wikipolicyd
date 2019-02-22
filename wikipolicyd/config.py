@@ -14,5 +14,9 @@ class ConfigFile(dict):
         """Loads a configuration file with a given name."""
         self.name = name
         file_path = _CONFIG_DIR / (name + ".toml")
+        if not file_path.exists():
+            raise RuntimeError(
+                    '{} must be a configuration file'.format(file_path))
+
         with file_path.open() as f:
             super().__init__(**toml.load(f))

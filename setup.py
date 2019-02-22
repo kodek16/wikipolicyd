@@ -14,6 +14,7 @@ setuptools.setup(
     install_requires=[
         'requests~=2.19.0',
         'toml~=0.10.0',
+        'click~=7.0',
     ],
 
     entry_points={
